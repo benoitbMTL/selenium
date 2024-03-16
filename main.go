@@ -50,50 +50,64 @@ func openBrowserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func openBrowser(browserName string, iterations int) error {
+    log.Printf("Starting browser session for: %s", browserName)
+
     var driverPath string
     var err error
 
     // Determine the operating system to choose the right driver
-    osType := runtime.GOOS // "windows", "linux", etc.
+    osType := runtime.GOOS
+    log.Printf("Detected operating system: %s", osType)
+
     switch browserName {
     case "chrome":
-        driverPath = "./chromedriver"
+        driverPath = "./webdrivers/chromedriver"
         if osType == "windows" {
             driverPath += ".exe"
         }
+        log.Printf("Using Chrome driver at: %s", driverPath)
     case "firefox":
-        driverPath = "./geckodriver"
+        driverPath = "./webdrivers/geckodriver"
         if osType == "windows" {
             driverPath += ".exe"
         }
+        log.Printf("Using Firefox driver at: %s", driverPath)
     case "edge":
-        driverPath = "./msedgedriver"
+        driverPath = "./webdrivers/msedgedriver"
         if osType == "windows" {
             driverPath += ".exe"
         }
+        log.Printf("Using Edge driver at: %s", driverPath)
     default:
-        return fmt.Errorf("unsupported browser: %s", browserName)
+        errMsg := fmt.Sprintf("Unsupported browser: %s", browserName)
+        log.Println(errMsg)
+        return fmt.Errorf(errMsg)
     }
 
-    // Note: For Edge, using selenium.NewRemote directly as NewEdgeDriverService might not be available.
+    log.Println("Initializing WebDriver session...")
     caps := selenium.Capabilities{"browserName": browserName}
     wd, err := selenium.NewRemote(caps, fmt.Sprintf("http://localhost:%d/wd/hub", 9515))
     if err != nil {
         log.Printf("Failed to create WebDriver session: %v", err)
         return err
     }
-    defer wd.Quit()
+    defer func() {
+        log.Println("Terminating WebDriver session.")
+        wd.Quit()
+    }()
 
     for i := 0; i < iterations; i++ {
-        log.Printf("Navigating to http://www.google.com, iteration %d", i+1)
+        log.Printf("Attempt %d: Navigating to http://www.google.com", i+1)
         err = wd.Get("http://www.google.com")
         if err != nil {
-            log.Printf("Failed to navigate: %v", err)
+            log.Printf("Failed to navigate on attempt %d: %v", i+1, err)
             return err
         }
-        // Here, you can add more interactions with the page.
+        log.Printf("Successfully navigated to http://www.google.com on attempt %d", i+1)
+        // Insert additional interactions with the page here.
+        // For example, searching, clicking links, etc.
     }
 
-    log.Println("Completed browser interactions")
+    log.Println("Completed all browser interactions successfully.")
     return nil
 }
