@@ -124,15 +124,46 @@ func openBrowser(browserName string, iterations int) error {
     return nil
 }
 
+package main
+
+import (
+    "fmt"
+    "log"
+    "net"
+    "os"
+    "os/exec"
+    "time"
+)
+
 func startDriver(driverPath, driverPort string) (*exec.Cmd, error) {
+    // Check if the port is already in use
+    log.Printf("Checking if port %s is available...", driverPort)
+    if portInUse(driverPort) {
+        return nil, fmt.Errorf("port %s is already in use", driverPort)
+    }
+
+    log.Printf("Starting driver with command: %s --port=%s", driverPath, driverPort)
     cmd := exec.Command(driverPath, "--port="+driverPort)
-    cmd.Stdout = os.Stdout // Redirect driver stdout to os.Stdout
-    cmd.Stderr = os.Stderr // Redirect driver stderr to os.Stderr
+    cmd.Stdout = os.Stdout // Redirect stdout of the driver to os.Stdout of the program
+    cmd.Stderr = os.Stderr // Redirect stderr of the driver to os.Stderr of the program
     err := cmd.Start()
     if err != nil {
-        log.Printf("Failed to start driver: %v", err)
+        log.Printf("Failed to start the driver: %v", err)
         return nil, err
     }
-    log.Printf("Driver started successfully on port %s", driverPort)
+
+    // Wait a moment to ensure driver has started
+    time.Sleep(2 * time.Second)
+
     return cmd, nil
+}
+
+// portInUse tries to make a connection to the given port and returns true if it's already in use.
+func portInUse(port string) bool {
+    conn, err := net.DialTimeout("tcp", net.JoinHostPort("localhost", port), time.Second)
+    if err != nil {
+        return false // Port is not in use
+    }
+    conn.Close() // Close the connection if open
+    return true
 }
