@@ -14,3 +14,9 @@ if [ $? -ne 0 ]; then
     echo "Failed to run Go program. Please check for compilation errors."
     exit 1
 fi
+
+
+# git status
+# git add .
+# git commit -m "message"
+# git push origin main

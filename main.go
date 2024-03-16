@@ -7,6 +7,7 @@ import (
     "net/http"
     "os/exec"
     "runtime"
+	"os"
     "github.com/tebeka/selenium"
 )
 
@@ -83,12 +84,14 @@ func openBrowser(browserName string, iterations int) error {
         return fmt.Errorf(errMsg)
     }
 
-    if err := cmd.Start(); err != nil {
-        log.Printf("Failed to start %s driver: %v", browserName, err)
-        return err
-    }
+	cmd, err = startDriver(driverPath, driverPort)
+	if err != nil {
+		log.Printf("Failed to start %s driver: %v", browserName, err)
+		return err
+	}
     log.Printf("%s Driver Started", browserName)
-    defer func() {
+    
+	defer func() {
         if err := cmd.Process.Kill(); err != nil {
             log.Printf("Failed to kill %s Driver process: %v", browserName, err)
         } else {
@@ -119,4 +122,17 @@ func openBrowser(browserName string, iterations int) error {
 
     log.Println("Completed all browser interactions successfully.")
     return nil
+}
+
+func startDriver(driverPath, driverPort string) (*exec.Cmd, error) {
+    cmd := exec.Command(driverPath, "--port="+driverPort)
+    cmd.Stdout = os.Stdout // Redirect driver stdout to os.Stdout
+    cmd.Stderr = os.Stderr // Redirect driver stderr to os.Stderr
+    err := cmd.Start()
+    if err != nil {
+        log.Printf("Failed to start driver: %v", err)
+        return nil, err
+    }
+    log.Printf("Driver started successfully on port %s", driverPort)
+    return cmd, nil
 }
