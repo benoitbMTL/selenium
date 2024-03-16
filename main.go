@@ -9,6 +9,7 @@ import (
     "runtime"
 	"os"
 	"time"
+	"net"
     "github.com/tebeka/selenium"
 )
 
