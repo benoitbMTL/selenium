@@ -8,20 +8,20 @@
     <button onclick="openBrowser('chrome')">Chrome</button>
     <button onclick="openBrowser('firefox')">Firefox</button>
     <button onclick="openBrowser('edge')">Edge</button>
-    <input type="number" id="iteration" name="iteration" min="1" placeholder="Nombre d'itération">
+    <input type="number" id="iteration" name="iteration" min="1" placeholder="Number of iterations" value="1">
     
     <script>
         function openBrowser(browser) {
-            const iterations = document.getElementById('iteration').value; // Récupérer la valeur de l'itération depuis l'input
+            const iterations = document.getElementById('iteration').value; // Retrieve the iteration value from the input
             if (!iterations || iterations < 1) {
-                alert('Veuillez entrer un nombre positif.');
+                alert('Please enter a positive number.');
                 return;
             }
 
-            // Préparer les données à envoyer
+            // Prepare the data to be sent
             const data = { browser: browser, iterations: parseInt(iterations, 10) };
 
-            // Envoyer une requête POST au serveur
+            // Send a POST request to the server
             fetch('/openBrowser', {
                 method: 'POST',
                 headers: {
@@ -33,16 +33,16 @@
                 if (response.ok) {
                     return response.json();
                 }
-                throw new Error('Réponse du serveur non OK.');
+                throw new Error('Server response not OK.');
             })
             .then(data => {
-                console.log('Succès:', data);
+                console.log('Success:', data);
             })
             .catch((error) => {
-                console.error('Erreur:', error);
+                console.error('Error:', error);
             });
 
-            console.log("Demande d'ouverture du navigateur : " + browser + " pour " + iterations + " itérations.");
+            console.log("Browser opening request: " + browser + " for " + iterations + " iterations.");
         }
     </script>
 </body>

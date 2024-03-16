@@ -5,6 +5,7 @@ import (
     "fmt"
     "log"
     "net/http"
+    "os/exec"
     "runtime"
     "github.com/tebeka/selenium"
 )
@@ -16,8 +17,7 @@ type BrowserRequest struct {
 }
 
 func main() {
-
-	fs := http.FileServer(http.Dir("."))
+    fs := http.FileServer(http.Dir("."))
     http.Handle("/", fs)
 
     http.HandleFunc("/openBrowser", openBrowserHandler)
@@ -39,7 +39,6 @@ func openBrowserHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Calling the openBrowser function
     err = openBrowser(req.Browser, req.Iterations)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -52,12 +51,12 @@ func openBrowserHandler(w http.ResponseWriter, r *http.Request) {
 func openBrowser(browserName string, iterations int) error {
     log.Printf("Starting browser session for: %s", browserName)
 
-    var driverPath string
+    var driverPath, driverPort string
+    var cmd *exec.Cmd
     var err error
 
-    // Determine the operating system to choose the right driver
     osType := runtime.GOOS
-    log.Printf("Detected operating system: %s", osType)
+    driverPort = "9515" // Assuming all drivers use the same port for simplicity, adjust if necessary
 
     switch browserName {
     case "chrome":
@@ -65,28 +64,40 @@ func openBrowser(browserName string, iterations int) error {
         if osType == "windows" {
             driverPath += ".exe"
         }
-        log.Printf("Using Chrome driver at: %s", driverPath)
+        cmd = exec.Command(driverPath, "--port="+driverPort)
     case "firefox":
         driverPath = "./webdrivers/geckodriver"
         if osType == "windows" {
             driverPath += ".exe"
         }
-        log.Printf("Using Firefox driver at: %s", driverPath)
+        cmd = exec.Command(driverPath, "--port="+driverPort)
     case "edge":
         driverPath = "./webdrivers/msedgedriver"
         if osType == "windows" {
             driverPath += ".exe"
         }
-        log.Printf("Using Edge driver at: %s", driverPath)
+        cmd = exec.Command(driverPath, "--port="+driverPort)
     default:
         errMsg := fmt.Sprintf("Unsupported browser: %s", browserName)
         log.Println(errMsg)
         return fmt.Errorf(errMsg)
     }
 
-    log.Println("Initializing WebDriver session...")
+    if err := cmd.Start(); err != nil {
+        log.Printf("Failed to start %s driver: %v", browserName, err)
+        return err
+    }
+    log.Printf("%s Driver Started", browserName)
+    defer func() {
+        if err := cmd.Process.Kill(); err != nil {
+            log.Printf("Failed to kill %s Driver process: %v", browserName, err)
+        } else {
+            log.Printf("%s Driver Terminated", browserName)
+        }
+    }()
+
     caps := selenium.Capabilities{"browserName": browserName}
-    wd, err := selenium.NewRemote(caps, fmt.Sprintf("http://localhost:%d/wd/hub", 9515))
+    wd, err := selenium.NewRemote(caps, "http://localhost:"+driverPort+"/wd/hub")
     if err != nil {
         log.Printf("Failed to create WebDriver session: %v", err)
         return err
@@ -104,8 +115,6 @@ func openBrowser(browserName string, iterations int) error {
             return err
         }
         log.Printf("Successfully navigated to http://www.google.com on attempt %d", i+1)
-        // Insert additional interactions with the page here.
-        // For example, searching, clicking links, etc.
     }
 
     log.Println("Completed all browser interactions successfully.")
