@@ -8,6 +8,7 @@ import (
     "os/exec"
     "runtime"
 	"os"
+	"time"
     "github.com/tebeka/selenium"
 )
 
@@ -123,17 +124,6 @@ func openBrowser(browserName string, iterations int) error {
     log.Println("Completed all browser interactions successfully.")
     return nil
 }
-
-package main
-
-import (
-    "fmt"
-    "log"
-    "net"
-    "os"
-    "os/exec"
-    "time"
-)
 
 func startDriver(driverPath, driverPort string) (*exec.Cmd, error) {
     // Check if the port is already in use
