@@ -1,23 +1,16 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <title>Selenium</title>
 </head>
-
 <body>
     <h1>Selenium</h1>
     <button onclick="openBrowser('chrome')">Chrome</button>
     <button onclick="openBrowser('firefox')">Firefox</button>
     <button onclick="openBrowser('edge')">Edge</button>
-    <button onclick="openBrowser('safari')">Safari</button>
-    <form id="form">
-        <input type="number" id="iteration" name="iteration" min="1" placeholder="Entrez un nombre positif">
-        <input type="submit">
-    </form>
+    <input type="number" id="iteration" name="iteration" min="1" placeholder="Nombre d'itération">
+    
     <script>
-
-
         function openBrowser(browser) {
             const iterations = document.getElementById('iteration').value; // Récupérer la valeur de l'itération depuis l'input
             if (!iterations || iterations < 1) {
@@ -26,7 +19,7 @@
             }
 
             // Préparer les données à envoyer
-            const data = { browser: browser, iterations: iterations };
+            const data = { browser: browser, iterations: parseInt(iterations, 10) };
 
             // Envoyer une requête POST au serveur
             fetch('/openBrowser', {
@@ -36,20 +29,21 @@
                 },
                 body: JSON.stringify(data),
             })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Succès:', data);
-                })
-                .catch((error) => {
-                    console.error('Erreur:', error);
-                });
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Réponse du serveur non OK.');
+            })
+            .then(data => {
+                console.log('Succès:', data);
+            })
+            .catch((error) => {
+                console.error('Erreur:', error);
+            });
 
             console.log("Demande d'ouverture du navigateur : " + browser + " pour " + iterations + " itérations.");
         }
-
-
-
     </script>
 </body>
-
 </html>
