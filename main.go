@@ -102,7 +102,7 @@ func openBrowser(browserName string, iterations int) error {
     }()
 
     caps := selenium.Capabilities{"browserName": browserName}
-    wd, err := selenium.NewRemote(caps, "http://localhost:"+driverPort+"/wd/hub")
+	wd, err := selenium.NewRemote(caps, "http://localhost:"+driverPort+"/session")
     if err != nil {
         log.Printf("Failed to create WebDriver session: %v", err)
         return err
