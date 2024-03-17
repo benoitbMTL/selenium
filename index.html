@@ -5,45 +5,28 @@
 </head>
 <body>
     <h1>Selenium</h1>
-    <button onclick="openBrowser('chrome')">Chrome</button>
-    <button onclick="openBrowser('firefox')">Firefox</button>
-    <button onclick="openBrowser('edge')">Edge</button>
-    <input type="number" id="iteration" name="iteration" min="1" placeholder="Number of iterations" value="1">
-    
+    <button id="chromeButton">Chrome</button>
+
     <script>
         function openBrowser(browser) {
-            const iterations = document.getElementById('iteration').value; // Retrieve the iteration value from the input
-            if (!iterations || iterations < 1) {
-                alert('Please enter a positive number.');
-                return;
+            if (browser === 'chrome') {
+                const {Builder, By, Key, until} = require('selenium-webdriver');
+
+                (async function example() {
+                    let driver = await new Builder().forBrowser('chrome').build();
+                    try {
+                        await driver.get('https://www.google.com');
+                        await driver.findElement(By.name('q')).sendKeys('fortinet', Key.RETURN);
+                    } finally {
+                        await driver.quit();
+                    }
+                })();
             }
-
-            // Prepare the data to be sent
-            const data = { browser: browser, iterations: parseInt(iterations, 10) };
-
-            // Send a POST request to the server
-            fetch('/openBrowser', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            })
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                }
-                throw new Error('Server response not OK.');
-            })
-            .then(data => {
-                console.log('Success:', data);
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
-
-            console.log("Browser opening request: " + browser + " for " + iterations + " iterations.");
         }
+
+        document.getElementById('chromeButton').addEventListener('click', function() {
+            openBrowser('chrome');
+        });
     </script>
 </body>
 </html>
